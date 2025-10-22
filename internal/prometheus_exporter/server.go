@@ -52,7 +52,26 @@ func (collector *LimitsCollector) Describe(ch chan<- *prometheus.Desc) {
 func (collector *LimitsCollector) Collect(ch chan<- prometheus.Metric) {
 
 	auth := github_client.InitConfig()
-	limits := github_client.GetRemainingLimits(auth.InitClient())
+  limits, err := github_client.GetRemainingLimits(auth.InitClient())
+    if err != nil {
+        // On error, expose zeros and return to avoid panics during scraping
+        if logMetricCollection {
+            log.Printf("error collecting metrics for %s: %v", githubAccount, err)
+        }
+        m1 := prometheus.MustNewConstMetric(collector.LimitTotal, prometheus.GaugeValue, 0)
+        m2 := prometheus.MustNewConstMetric(collector.LimitRemaining, prometheus.GaugeValue, 0)
+        m3 := prometheus.MustNewConstMetric(collector.LimitUsed, prometheus.GaugeValue, 0)
+        m4 := prometheus.MustNewConstMetric(collector.SecondsLeft, prometheus.GaugeValue, 0)
+        m1 = prometheus.NewMetricWithTimestamp(time.Now(), m1)
+        m2 = prometheus.NewMetricWithTimestamp(time.Now(), m2)
+        m3 = prometheus.NewMetricWithTimestamp(time.Now(), m3)
+        m4 = prometheus.NewMetricWithTimestamp(time.Now(), m4)
+        ch <- m1
+        ch <- m2
+        ch <- m3
+        ch <- m4
+        return
+    }
 	if logMetricCollection {
 		log.Printf("Collected metrics for %s", githubAccount)
 		log.Printf("Limit: %d | Used: %d | Remaining: %d", limits.Limit, limits.Used, limits.Remaining)
