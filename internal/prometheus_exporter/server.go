@@ -50,38 +50,37 @@ func (collector *LimitsCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (collector *LimitsCollector) emitMetrics(ch chan<- prometheus.Metric, limits github_client.RateLimits) {
-  m1 := prometheus.MustNewConstMetric(collector.LimitTotal, prometheus.GaugeValue, float64(limits.Limit))
-  m2 := prometheus.MustNewConstMetric(collector.LimitRemaining, prometheus.GaugeValue, float64(limits.Remaining))
-  m3 := prometheus.MustNewConstMetric(collector.LimitUsed, prometheus.GaugeValue, float64(limits.Used))
-  m4 := prometheus.MustNewConstMetric(collector.SecondsLeft, prometheus.GaugeValue, limits.SecondsLeft)
-  now := time.Now()
-  m1 = prometheus.NewMetricWithTimestamp(now, m1)
-  m2 = prometheus.NewMetricWithTimestamp(now, m2)
-  m3 = prometheus.NewMetricWithTimestamp(now, m3)
-  m4 = prometheus.NewMetricWithTimestamp(now, m4)
-  ch <- m1
-  ch <- m2
-  ch <- m3
-  ch <- m4
+	m1 := prometheus.MustNewConstMetric(collector.LimitTotal, prometheus.GaugeValue, float64(limits.Limit))
+	m2 := prometheus.MustNewConstMetric(collector.LimitRemaining, prometheus.GaugeValue, float64(limits.Remaining))
+	m3 := prometheus.MustNewConstMetric(collector.LimitUsed, prometheus.GaugeValue, float64(limits.Used))
+	m4 := prometheus.MustNewConstMetric(collector.SecondsLeft, prometheus.GaugeValue, limits.SecondsLeft)
+	now := time.Now()
+	m1 = prometheus.NewMetricWithTimestamp(now, m1)
+	m2 = prometheus.NewMetricWithTimestamp(now, m2)
+	m3 = prometheus.NewMetricWithTimestamp(now, m3)
+	m4 = prometheus.NewMetricWithTimestamp(now, m4)
+	ch <- m1
+	ch <- m2
+	ch <- m3
+	ch <- m4
 }
 
 func (collector *LimitsCollector) Collect(ch chan<- prometheus.Metric) {
-
 	auth := github_client.InitConfig()
-  limits, err := github_client.GetRemainingLimits(auth.InitClient())
-  if err != nil {
-    // On error expose zeros and return to avoid panics during scraping
-    if logMetricCollection {
-        log.Printf("error collecting metrics for %s: %v", githubAccount, err)
-    }
-    collector.emitMetrics(ch, github_client.RateLimits{})
-    return
-  }
+	limits, err := github_client.GetRemainingLimits(auth.InitClient())
+	if err != nil {
+		// On error expose zeros and return to avoid panics during scraping
+		if logMetricCollection {
+			log.Printf("error collecting metrics for %s: %v", githubAccount, err)
+		}
+		collector.emitMetrics(ch, github_client.RateLimits{})
+		return
+	}
 	if logMetricCollection {
 		log.Printf("Collected metrics for %s", githubAccount)
 		log.Printf("Limit: %d | Used: %d | Remaining: %d", limits.Limit, limits.Used, limits.Remaining)
 	}
-    collector.emitMetrics(ch, limits)
+	collector.emitMetrics(ch, limits)
 }
 
 func Run() {
