@@ -18,14 +18,6 @@ func RespError(err error) error {
 	return nil
 }
 
-// FailFast terminates the process immediately if err is non-nil.
-// Use this for unrecoverable initialization/configuration errors.
-func FailFast(err error) {
-	if err != nil {
-		log.Fatalf("fatal error: %v", err)
-	}
-}
-
 func GetOSVar(envVar string) string {
 	value, present := os.LookupEnv(envVar)
 	if !present {
