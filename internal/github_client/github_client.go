@@ -16,26 +16,26 @@ import (
 )
 
 func GetRemainingLimits(c *github.Client) (RateLimits, error) {
-    if c == nil {
-        return RateLimits{}, utils.RespError(fmt.Errorf("github client is nil"))
-    }
+  if c == nil {
+    return RateLimits{}, utils.RespError(fmt.Errorf("github client is nil"))
+  }
 
-    ctx := context.Background()
+  ctx := context.Background()
 
-    limits, _, err := c.RateLimit.Get(ctx)
-    if err != nil {
-        return RateLimits{}, utils.RespError(err)
-    }
-    if limits == nil || limits.Core == nil {
-        return RateLimits{}, utils.RespError(fmt.Errorf("rate limit response is nil"))
-    }
+  limits, _, err := c.RateLimit.Get(ctx)
+  if err != nil {
+    return RateLimits{}, utils.RespError(err)
+  }
+  if limits == nil || limits.Core == nil {
+    return RateLimits{}, utils.RespError(fmt.Errorf("rate limit response is nil"))
+  }
 
-    return RateLimits{
-        Limit:       limits.Core.Limit,
-        Remaining:   limits.Core.Remaining,
-        Used:        limits.Core.Limit - limits.Core.Remaining,
-        SecondsLeft: time.Until(limits.Core.Reset.Time).Seconds(),
-    }, nil
+  return RateLimits{
+    Limit:       limits.Core.Limit,
+    Remaining:   limits.Core.Remaining,
+    Used:        limits.Core.Limit - limits.Core.Remaining,
+    SecondsLeft: time.Until(limits.Core.Reset.Time).Seconds(),
+  }, nil
 }
 
 func (c *TokenConfig) InitClient() *github.Client {
